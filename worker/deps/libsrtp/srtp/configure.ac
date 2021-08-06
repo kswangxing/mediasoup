@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([libsrtp2], [2.3.0], [https://github.com/cisco/libsrtp/issues])
+AC_INIT([libsrtp2], [2.4.0-pre], [https://github.com/cisco/libsrtp/issues])
 
 dnl Must come before AC_PROG_CC
 EMPTY_CFLAGS="no"
@@ -98,7 +98,7 @@ if test "$EMPTY_CFLAGS" = "yes"; then
   done
 
   OOPT=""
-  for f in -O4 -O3; do
+  for f in -O3; do
     if test "x$OOPT" = "x"; then
       AC_MSG_CHECKING([whether ${CC-c} accepts $f])
       save_cflags="$CFLAGS"

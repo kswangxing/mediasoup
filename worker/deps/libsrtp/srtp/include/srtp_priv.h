@@ -151,14 +151,27 @@ typedef struct srtp_stream_ctx_t_ {
     int *enc_xtn_hdr;
     int enc_xtn_hdr_count;
     uint32_t pending_roc;
-    struct srtp_stream_ctx_t_ *next; /* linked list of streams */
 } strp_stream_ctx_t_;
+
+/*
+ * An srtp_stream_list_t is a list of streams searchable by SSRC.
+ *
+ * Pointers to streams and their respective SSRCs are stored in two arrays,
+ * where the stream pointer and the SSRC at the same index correspond to each
+ * other.
+ */
+typedef struct srtp_stream_list_t {
+    srtp_stream_ctx_t **streams;
+    uint32_t *ssrcs;
+    uint32_t size;
+    uint32_t capacity;
+} srtp_stream_list_t;
 
 /*
  * an srtp_ctx_t holds a stream list and a service description
  */
 typedef struct srtp_ctx_t_ {
-    struct srtp_stream_ctx_t_ *stream_list;     /* linked list of streams     */
+    srtp_stream_list_t stream_list;             /* list of streams            */
     struct srtp_stream_ctx_t_ *stream_template; /* act as template for other  */
                                                 /* streams                    */
     void *user_data;                            /* user custom data           */

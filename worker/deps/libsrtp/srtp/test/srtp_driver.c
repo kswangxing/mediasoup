@@ -1478,8 +1478,8 @@ srtp_err_status_t srtp_session_print_policy(srtp_t srtp)
     }
 
     /* loop over streams in session, printing the policy of each */
-    stream = srtp->stream_list;
-    while (stream != NULL) {
+    for (uint32_t pos = 0u, n = srtp->stream_list.size; pos < n; ++pos) {
+        stream = srtp->stream_list.streams[pos];
         if (stream->rtp_services > sec_serv_conf_and_auth) {
             return srtp_err_status_bad_param;
         }
@@ -1516,9 +1516,6 @@ srtp_err_status_t srtp_session_print_policy(srtp_t srtp)
         } else {
             printf("none\n");
         }
-
-        /* advance to next stream in the list */
-        stream = stream->next;
     }
     return srtp_err_status_ok;
 }

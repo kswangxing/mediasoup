@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(libsrtp2 LANGUAGES C)
 
-set(PACKAGE_VERSION 2.3.0)
+set(PACKAGE_VERSION 2.4.0)
 set(PACKAGE_STRING "${CMAKE_PROJECT_NAME} ${PACKAGE_VERSION}")
 
 include(TestBigEndian)
@@ -176,6 +176,8 @@ add_library(srtp2
   ${SOURCES_H}
 )
 
+set_target_properties(srtp2 PROPERTIES VERSION ${PACKAGE_VERSION})
+
 target_include_directories(srtp2 PUBLIC crypto/include include)
 if(ENABLE_OPENSSL)
   target_link_libraries(srtp2 OpenSSL::Crypto)
@@ -187,7 +189,7 @@ endif()
 install(TARGETS srtp2 DESTINATION lib)
 install(FILES include/srtp.h crypto/include/auth.h
   crypto/include/cipher.h
-  crypto/include/cipher_types.h
+  crypto/include/crypto_types.h
   DESTINATION include/srtp2)
 
 if(TEST_APPS)
