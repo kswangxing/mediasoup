@@ -10,15 +10,15 @@ namespace RTC
 	template<typename T>
 	bool SeqManager<T>::SeqLowerThan::operator()(const T lhs, const T rhs) const
 	{
-		return ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
-		       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
+		return ((rhs > lhs) && (rhs - lhs <= HalfMax)) ||
+		       ((lhs > rhs) && (lhs - rhs > HalfMax));
 	}
 
 	template<typename T>
 	bool SeqManager<T>::SeqHigherThan::operator()(const T lhs, const T rhs) const
 	{
-		return ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
-		       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
+		return ((lhs > rhs) && (lhs - rhs <= HalfMax)) ||
+		       ((rhs > lhs) && (rhs - lhs > HalfMax));
 	}
 
 	template<typename T>
@@ -78,7 +78,7 @@ namespace RTC
 		{
 			// Delete dropped inputs older than input - MaxValue/2.
 			size_t droppedCount = this->dropped.size();
-			auto it             = this->dropped.lower_bound(input - MaxValue / 2);
+			auto it             = this->dropped.lower_bound(input - HalfMax);
 
 			this->dropped.erase(this->dropped.begin(), it);
 			this->base -= (droppedCount - this->dropped.size());
@@ -110,12 +110,12 @@ namespace RTC
 
 		// New input is higher than the maximum seen. But less than acceptable units higher.
 		// Keep it as the maximum seen. See Drop().
-		if (idelta < MaxValue / 2)
+		if (idelta < HalfMax)
 			this->maxInput = input;
 
 		// New output is higher than the maximum seen. But less than acceptable units higher.
 		// Keep it as the maximum seen. See Sync().
-		if (odelta < MaxValue / 2)
+		if (odelta < HalfMax)
 			this->maxOutput = output;
 
 		return true;
