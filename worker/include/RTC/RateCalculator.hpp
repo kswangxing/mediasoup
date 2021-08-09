@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
 #include "RTC/RtpPacket.hpp"
+#include <vector>
 
 namespace RTC
 {
@@ -24,7 +25,8 @@ namespace RTC
 		  : windowSizeMs(windowSizeMs), scale(scale), windowItems(windowItems)
 		{
 			this->itemSizeMs = std::max(windowSizeMs / windowItems, static_cast<size_t>(1));
-
+			buffer.reserve(windowSizeMs);
+			buffer.resize(windowSizeMs);
 			Reset();
 		}
 		void Update(size_t size, uint64_t nowMs);
@@ -38,7 +40,8 @@ namespace RTC
 		void RemoveOldData(uint64_t nowMs);
 		void Reset()
 		{
-			this->buffer.reset(new BufferItem[this->windowItems]);
+			// this->buffer.reset(new BufferItem[this->windowItems]);
+			std::memset(&buffer.front(), 0, sizeof(BufferItem) * windowSizeMs);
 			this->newestItemStartTime = 0u;
 			this->newestItemIndex     = -1;
 			this->oldestItemStartTime = 0u;
@@ -51,8 +54,8 @@ namespace RTC
 	private:
 		struct BufferItem
 		{
-			size_t count{ 0u };
-			uint64_t time{ 0u };
+			size_t count;
+			uint64_t time;
 		};
 
 	private:
@@ -65,7 +68,8 @@ namespace RTC
 		// Item Size (in milliseconds), calculated as: windowSizeMs / windowItems.
 		size_t itemSizeMs{ 0u };
 		// Buffer to keep data.
-		std::unique_ptr<BufferItem[]> buffer;
+		// std::unique_ptr<BufferItem[]> buffer;
+		std::vector<BufferItem> buffer;
 		// Time (in milliseconds) for last item in the time window.
 		uint64_t newestItemStartTime{ 0u };
 		// Index for the last item in the time window.

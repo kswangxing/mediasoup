@@ -54,8 +54,7 @@ namespace RTC
 		else
 		{
 			// Update the newest item.
-			BufferItem& item = buffer[this->newestItemIndex];
-			item.count += size;
+			buffer[this->newestItemIndex].count += size;
 		}
 
 		// Set the oldest item index and time, if not set.
