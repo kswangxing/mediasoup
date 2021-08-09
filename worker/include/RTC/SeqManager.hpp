@@ -12,6 +12,7 @@ namespace RTC
 	{
 	public:
 		static constexpr T MaxValue = std::numeric_limits<T>::max();
+		static constexpr T HalfMax = MaxValue >> 1;
 
 	public:
 		struct SeqLowerThan
