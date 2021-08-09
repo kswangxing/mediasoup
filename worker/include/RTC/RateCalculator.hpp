@@ -25,8 +25,7 @@ namespace RTC
 		  : windowSizeMs(windowSizeMs), scale(scale), windowItems(windowItems)
 		{
 			this->itemSizeMs = std::max(windowSizeMs / windowItems, static_cast<size_t>(1));
-			buffer.reserve(windowSizeMs);
-			buffer.resize(windowSizeMs);
+			buffer.resize(windowItems);
 			Reset();
 		}
 		void Update(size_t size, uint64_t nowMs);
@@ -41,7 +40,7 @@ namespace RTC
 		void Reset()
 		{
 			// this->buffer.reset(new BufferItem[this->windowItems]);
-			std::memset(&buffer.front(), 0, sizeof(BufferItem) * windowSizeMs);
+			std::memset(&buffer.front(), 0, sizeof(BufferItem) * windowItems);
 			this->newestItemStartTime = 0u;
 			this->newestItemIndex     = -1;
 			this->oldestItemStartTime = 0u;
