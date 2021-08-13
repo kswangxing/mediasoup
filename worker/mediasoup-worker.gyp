@@ -238,6 +238,7 @@
       'include/RTC/RTCP/XR.hpp',
       'include/RTC/RTCP/XrDelaySinceLastRr.hpp',
       'include/RTC/RTCP/XrReceiverReferenceTime.hpp'
+      'include/ObjectPool.hpp'
     ],
     'include_dirs':
     [

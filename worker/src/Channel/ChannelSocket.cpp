@@ -128,24 +128,21 @@ namespace Channel
 		try
 		{
 			json jsonMessage = json::parse(msg, msg + msgLen);
-			auto* request    = new Channel::ChannelRequest(this, jsonMessage);
+			Channel::ChannelRequest request(this, jsonMessage);
 
 			// Notify the listener.
 			try
 			{
-				this->listener->OnChannelRequest(this, request);
+				this->listener->OnChannelRequest(this, &request);
 			}
 			catch (const MediaSoupTypeError& error)
 			{
-				request->TypeError(error.what());
+				request.TypeError(error.what());
 			}
 			catch (const MediaSoupError& error)
 			{
-				request->Error(error.what());
+				request.Error(error.what());
 			}
-
-			// Delete the Request.
-			delete request;
 		}
 		catch (const json::parse_error& error)
 		{

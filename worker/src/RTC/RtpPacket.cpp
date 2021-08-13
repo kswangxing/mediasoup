@@ -6,10 +6,13 @@
 #include <cstring>  // std::memcpy(), std::memmove(), std::memset()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
 	/* Class methods. */
+	constexpr size_t max_packet_size = 5000;
+	ObjectPool<RtpPacket> RPPool(max_packet_size);
 
 	RtpPacket* RtpPacket::Parse(const uint8_t* data, size_t len)
 	{
@@ -121,6 +124,10 @@ namespace RTC
 		  new RtpPacket(header, headerExtension, payload, payloadLength, payloadPadding, len);
 
 		return packet;
+	}
+
+	void RtpPacket::Release(RtpPacket* packet) {
+		RPPool.Delete(packet);
 	}
 
 	/* Instance methods. */
@@ -692,9 +699,9 @@ namespace RTC
 		MS_ASSERT(static_cast<size_t>(ptr - buffer) == this->size, "ptr - buffer == this->size");
 
 		// Create the new RtpPacket instance and return it.
-		auto* packet = new RtpPacket(
-		  newHeader, newHeaderExtension, newPayload, this->payloadLength, this->payloadPadding, this->size);
-
+		//auto* packet = new RtpPacket(
+		//  newHeader, newHeaderExtension, newPayload, this->payloadLength, this->payloadPadding, this->size);
+		auto* packet = RPPool.New(newHeader, newHeaderExtension, newPayload, this->payloadLength, this->payloadPadding, this->size);
 		// Keep already set extension ids.
 		packet->midExtensionId               = this->midExtensionId;
 		packet->ridExtensionId               = this->ridExtensionId;

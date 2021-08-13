@@ -133,7 +133,6 @@ namespace RTC
 
 		static RtpPacket* Parse(const uint8_t* data, size_t len);
 
-	private:
 		RtpPacket(
 		  Header* header,
 		  HeaderExtension* headerExtension,
@@ -141,6 +140,8 @@ namespace RTC
 		  size_t payloadLength,
 		  uint8_t payloadPadding,
 		  size_t size);
+
+		static void Release(RtpPacket* packet);
 
 	public:
 		~RtpPacket();
