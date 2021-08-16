@@ -17,7 +17,7 @@ public:
 	}
 	static uint64_t GetTimeMs()
 	{
-		return static_cast<uint64_t>(uv_hrtime() / 1000000u);
+		return DepLibUV::loop->time;
 	}
 	static uint64_t GetTimeUs()
 	{
