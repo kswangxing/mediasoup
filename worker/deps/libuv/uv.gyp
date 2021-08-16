@@ -215,7 +215,7 @@
         [ 'OS != "zos"', {
           'cflags': [
             '-fvisibility=hidden',
-            '-g',
+            '-O3',
             '--std=gnu89',
             '-Wall',
             '-Wextra',
