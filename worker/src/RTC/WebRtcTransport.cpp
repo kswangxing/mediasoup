@@ -906,7 +906,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::StunPacket* packet = RTC::StunPacket::Parse(data, len);
+		RTC::StunPacket stunP;
+		RTC::StunPacket* packet = RTC::StunPacket::Parse(data, len, stunP);
 
 		if (!packet)
 		{
@@ -917,8 +918,6 @@ namespace RTC
 
 		// Pass it to the IceServer.
 		this->iceServer->ProcessStunPacket(packet, tuple);
-
-		delete packet;
 	}
 
 	inline void WebRtcTransport::OnDtlsDataReceived(

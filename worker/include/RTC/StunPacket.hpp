@@ -67,15 +67,17 @@ namespace RTC
 			);
 			// clang-format on
 		}
-		static StunPacket* Parse(const uint8_t* data, size_t len);
+		static StunPacket* Parse(const uint8_t* data, size_t len, StunPacket& stunP);
 
 	private:
 		static const uint8_t magicCookie[];
 
 	public:
+		StunPacket() {};
 		StunPacket(
 		  Class klass, Method method, const uint8_t* transactionId, const uint8_t* data, size_t size);
 		~StunPacket();
+		void Init(Class klass, Method method, const uint8_t* transactionId, const uint8_t* data, size_t size);
 
 		void Dump() const;
 		Class GetClass() const
@@ -164,8 +166,8 @@ namespace RTC
 		}
 		Authentication CheckAuthentication(
 		  const std::string& localUsername, const std::string& localPassword);
-		StunPacket* CreateSuccessResponse();
-		StunPacket* CreateErrorResponse(uint16_t errorCode);
+		StunPacket CreateSuccessResponse();
+		StunPacket CreateErrorResponse(uint16_t errorCode);
 		void Authenticate(const std::string& password);
 		void Serialize(uint8_t* buffer);
 

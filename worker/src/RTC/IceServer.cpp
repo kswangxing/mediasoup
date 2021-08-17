@@ -36,12 +36,11 @@ namespace RTC
 				  static_cast<unsigned int>(packet->GetMethod()));
 
 				// Reply 400.
-				RTC::StunPacket* response = packet->CreateErrorResponse(400);
+				RTC::StunPacket response = packet->CreateErrorResponse(400);
 
-				response->Serialize(StunSerializeBuffer);
-				this->listener->OnIceServerSendStunPacket(this, response, tuple);
+				response.Serialize(StunSerializeBuffer);
 
-				delete response;
+				this->listener->OnIceServerSendStunPacket(this, &response, tuple);
 			}
 			else
 			{
@@ -62,12 +61,10 @@ namespace RTC
 				MS_WARN_TAG(ice, "STUN Binding Request without FINGERPRINT => 400");
 
 				// Reply 400.
-				RTC::StunPacket* response = packet->CreateErrorResponse(400);
+				RTC::StunPacket response = packet->CreateErrorResponse(400);
 
-				response->Serialize(StunSerializeBuffer);
-				this->listener->OnIceServerSendStunPacket(this, response, tuple);
-
-				delete response;
+				response.Serialize(StunSerializeBuffer);
+				this->listener->OnIceServerSendStunPacket(this, &response, tuple);
 			}
 			else
 			{
@@ -87,12 +84,10 @@ namespace RTC
 					MS_WARN_TAG(ice, "mising required attributes in STUN Binding Request => 400");
 
 					// Reply 400.
-					RTC::StunPacket* response = packet->CreateErrorResponse(400);
+					RTC::StunPacket response = packet->CreateErrorResponse(400);
 
-					response->Serialize(StunSerializeBuffer);
-					this->listener->OnIceServerSendStunPacket(this, response, tuple);
-
-					delete response;
+					response.Serialize(StunSerializeBuffer);
+					this->listener->OnIceServerSendStunPacket(this, &response, tuple);
 
 					return;
 				}
@@ -133,12 +128,10 @@ namespace RTC
 						MS_WARN_TAG(ice, "wrong authentication in STUN Binding Request => 401");
 
 						// Reply 401.
-						RTC::StunPacket* response = packet->CreateErrorResponse(401);
+						RTC::StunPacket response = packet->CreateErrorResponse(401);
 
-						response->Serialize(StunSerializeBuffer);
-						this->listener->OnIceServerSendStunPacket(this, response, tuple);
-
-						delete response;
+						response.Serialize(StunSerializeBuffer);
+						this->listener->OnIceServerSendStunPacket(this, &response, tuple);
 
 						return;
 					}
@@ -148,12 +141,10 @@ namespace RTC
 						MS_WARN_TAG(ice, "cannot check authentication in STUN Binding Request => 400");
 
 						// Reply 400.
-						RTC::StunPacket* response = packet->CreateErrorResponse(400);
+						RTC::StunPacket response = packet->CreateErrorResponse(400);
 
-						response->Serialize(StunSerializeBuffer);
-						this->listener->OnIceServerSendStunPacket(this, response, tuple);
-
-						delete response;
+						response.Serialize(StunSerializeBuffer);
+						this->listener->OnIceServerSendStunPacket(this, &response, tuple);
 
 						return;
 					}
@@ -165,12 +156,10 @@ namespace RTC
 					MS_WARN_TAG(ice, "peer indicates ICE-CONTROLLED in STUN Binding Request => 487");
 
 					// Reply 487 (Role Conflict).
-					RTC::StunPacket* response = packet->CreateErrorResponse(487);
+					RTC::StunPacket response = packet->CreateErrorResponse(487);
 
-					response->Serialize(StunSerializeBuffer);
-					this->listener->OnIceServerSendStunPacket(this, response, tuple);
-
-					delete response;
+					response.Serialize(StunSerializeBuffer);
+					this->listener->OnIceServerSendStunPacket(this, &response, tuple);
 
 					return;
 				}
@@ -181,22 +170,20 @@ namespace RTC
 				  packet->HasUseCandidate() ? "true" : "false");
 
 				// Create a success response.
-				RTC::StunPacket* response = packet->CreateSuccessResponse();
+				RTC::StunPacket response = packet->CreateSuccessResponse();
 
 				// Add XOR-MAPPED-ADDRESS.
-				response->SetXorMappedAddress(tuple->GetRemoteAddress());
+				response.SetXorMappedAddress(tuple->GetRemoteAddress());
 
 				// Authenticate the response.
 				if (this->oldPassword.empty())
-					response->Authenticate(this->password);
+					response.Authenticate(this->password);
 				else
-					response->Authenticate(this->oldPassword);
+					response.Authenticate(this->oldPassword);
 
 				// Send back.
-				response->Serialize(StunSerializeBuffer);
-				this->listener->OnIceServerSendStunPacket(this, response, tuple);
-
-				delete response;
+				response.Serialize(StunSerializeBuffer);
+				this->listener->OnIceServerSendStunPacket(this, &response, tuple);
 
 				// Handle the tuple.
 				HandleTuple(tuple, packet->HasUseCandidate());

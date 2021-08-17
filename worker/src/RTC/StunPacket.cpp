@@ -15,7 +15,7 @@ namespace RTC
 
 	/* Class methods. */
 
-	StunPacket* StunPacket::Parse(const uint8_t* data, size_t len)
+	StunPacket* StunPacket::Parse(const uint8_t* data, size_t len, StunPacket& stunP)
 	{
 		MS_TRACE();
 
@@ -65,9 +65,9 @@ namespace RTC
 		uint16_t msgClass = ((data[0] & 0x01) << 1) | ((data[1] & 0x10) >> 4);
 
 		// Create a new StunPacket (data + 8 points to the received TransactionID field).
-		auto* packet = new StunPacket(
-		  static_cast<Class>(msgClass), static_cast<Method>(msgMethod), data + 8, data, len);
-
+		//auto* packet = new StunPacket(
+		//  static_cast<Class>(msgClass), static_cast<Method>(msgMethod), data + 8, data, len);
+		stunP.Init(static_cast<Class>(msgClass), static_cast<Method>(msgMethod), data + 8, data, len);
 		/*
 		    STUN Attributes
 
@@ -107,8 +107,6 @@ namespace RTC
 			if ((pos + 4 + attrLength) > len)
 			{
 				MS_WARN_TAG(ice, "the attribute length exceeds the remaining size, packet discarded");
-
-				delete packet;
 				return nullptr;
 			}
 
@@ -116,8 +114,6 @@ namespace RTC
 			if (hasFingerprint)
 			{
 				MS_WARN_TAG(ice, "attribute after FINGERPRINT is not allowed, packet discarded");
-
-				delete packet;
 				return nullptr;
 			}
 
@@ -128,8 +124,6 @@ namespace RTC
 				  ice,
 				  "attribute after MESSAGE-INTEGRITY other than FINGERPRINT is not allowed, "
 				  "packet discarded");
-
-				delete packet;
 				return nullptr;
 			}
 
@@ -139,7 +133,7 @@ namespace RTC
 			{
 				case Attribute::USERNAME:
 				{
-					packet->SetUsername(
+					stunP.SetUsername(
 					  reinterpret_cast<const char*>(attrValuePos), static_cast<size_t>(attrLength));
 
 					break;
@@ -151,12 +145,10 @@ namespace RTC
 					if (attrLength != 4)
 					{
 						MS_WARN_TAG(ice, "attribute PRIORITY must be 4 bytes length, packet discarded");
-
-						delete packet;
 						return nullptr;
 					}
 
-					packet->SetPriority(Utils::Byte::Get4Bytes(attrValuePos, 0));
+					stunP.SetPriority(Utils::Byte::Get4Bytes(attrValuePos, 0));
 
 					break;
 				}
@@ -167,12 +159,10 @@ namespace RTC
 					if (attrLength != 8)
 					{
 						MS_WARN_TAG(ice, "attribute ICE-CONTROLLING must be 8 bytes length, packet discarded");
-
-						delete packet;
 						return nullptr;
 					}
 
-					packet->SetIceControlling(Utils::Byte::Get8Bytes(attrValuePos, 0));
+					stunP.SetIceControlling(Utils::Byte::Get8Bytes(attrValuePos, 0));
 
 					break;
 				}
@@ -183,12 +173,10 @@ namespace RTC
 					if (attrLength != 8)
 					{
 						MS_WARN_TAG(ice, "attribute ICE-CONTROLLED must be 8 bytes length, packet discarded");
-
-						delete packet;
 						return nullptr;
 					}
 
-					packet->SetIceControlled(Utils::Byte::Get8Bytes(attrValuePos, 0));
+					stunP.SetIceControlled(Utils::Byte::Get8Bytes(attrValuePos, 0));
 
 					break;
 				}
@@ -199,12 +187,10 @@ namespace RTC
 					if (attrLength != 0)
 					{
 						MS_WARN_TAG(ice, "attribute USE-CANDIDATE must be 0 bytes length, packet discarded");
-
-						delete packet;
 						return nullptr;
 					}
 
-					packet->SetUseCandidate();
+					stunP.SetUseCandidate();
 
 					break;
 				}
@@ -215,13 +201,11 @@ namespace RTC
 					if (attrLength != 20)
 					{
 						MS_WARN_TAG(ice, "attribute MESSAGE-INTEGRITY must be 20 bytes length, packet discarded");
-
-						delete packet;
 						return nullptr;
 					}
 
 					hasMessageIntegrity = true;
-					packet->SetMessageIntegrity(attrValuePos);
+					stunP.SetMessageIntegrity(attrValuePos);
 
 					break;
 				}
@@ -232,15 +216,13 @@ namespace RTC
 					if (attrLength != 4)
 					{
 						MS_WARN_TAG(ice, "attribute FINGERPRINT must be 4 bytes length, packet discarded");
-
-						delete packet;
 						return nullptr;
 					}
 
 					hasFingerprint     = true;
 					fingerprintAttrPos = pos;
 					fingerprint        = Utils::Byte::Get4Bytes(attrValuePos, 0);
-					packet->SetFingerprint();
+					stunP.SetFingerprint();
 
 					break;
 				}
@@ -251,8 +233,6 @@ namespace RTC
 					if (attrLength < 4)
 					{
 						MS_WARN_TAG(ice, "attribute ERROR-CODE must be >= 4bytes length, packet discarded");
-
-						delete packet;
 						return nullptr;
 					}
 
@@ -260,7 +240,7 @@ namespace RTC
 					uint8_t errorNumber = Utils::Byte::Get1Byte(attrValuePos, 3);
 					auto errorCode      = static_cast<uint16_t>(errorClass * 100 + errorNumber);
 
-					packet->SetErrorCode(errorCode);
+					stunP.SetErrorCode(errorCode);
 
 					break;
 				}
@@ -277,8 +257,6 @@ namespace RTC
 		if (pos != len)
 		{
 			MS_WARN_TAG(ice, "computed packet size does not match total size, packet discarded");
-
-			delete packet;
 			return nullptr;
 		}
 
@@ -296,13 +274,11 @@ namespace RTC
 				  ice,
 				  "computed FINGERPRINT value does not match the value in the packet, "
 				  "packet discarded");
-
-				delete packet;
 				return nullptr;
 			}
 		}
 
-		return packet;
+		return &stunP;
 	}
 
 	/* Instance methods. */
@@ -318,6 +294,15 @@ namespace RTC
 	StunPacket::~StunPacket()
 	{
 		MS_TRACE();
+	}
+
+	void StunPacket::Init(Class klass, Method method, const uint8_t* transactionId, const uint8_t* data, size_t size)
+	{
+		this->klass = klass;
+		this->method = method;
+		this->transactionId = transactionId;
+		this->data = const_cast<uint8_t*>(data);
+	    this->size = size;
 	}
 
 	void StunPacket::Dump() const
@@ -462,7 +447,7 @@ namespace RTC
 		return result;
 	}
 
-	StunPacket* StunPacket::CreateSuccessResponse()
+	StunPacket StunPacket::CreateSuccessResponse()
 	{
 		MS_TRACE();
 
@@ -470,10 +455,10 @@ namespace RTC
 		  this->klass == Class::REQUEST,
 		  "attempt to create a success response for a non Request STUN packet");
 
-		return new StunPacket(Class::SUCCESS_RESPONSE, this->method, this->transactionId, nullptr, 0);
+		return StunPacket(Class::SUCCESS_RESPONSE, this->method, this->transactionId, nullptr, 0);
 	}
 
-	StunPacket* StunPacket::CreateErrorResponse(uint16_t errorCode)
+	StunPacket StunPacket::CreateErrorResponse(uint16_t errorCode)
 	{
 		MS_TRACE();
 
@@ -481,12 +466,10 @@ namespace RTC
 		  this->klass == Class::REQUEST,
 		  "attempt to create an error response for a non Request STUN packet");
 
-		auto* response =
-		  new StunPacket(Class::ERROR_RESPONSE, this->method, this->transactionId, nullptr, 0);
+		StunPacket stunP(Class::SUCCESS_RESPONSE, this->method, this->transactionId, nullptr, 0);
+		stunP.SetErrorCode(errorCode);
 
-		response->SetErrorCode(errorCode);
-
-		return response;
+		return stunP;
 	}
 
 	void StunPacket::Authenticate(const std::string& password)
