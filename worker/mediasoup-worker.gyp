@@ -310,14 +310,14 @@
       }],
 
       [ 'OS != "win"', {
-        'cflags': [ '-std=c++14', '-Wall', '-Wextra', '-Wno-unused-parameter', '-Wno-implicit-fallthrough' ]
+        'cflags': [ '-std=c++17', '-Wall', '-Wextra', '-Wno-unused-parameter', '-Wno-implicit-fallthrough' ]
       }],
 
       [ 'OS == "mac"', {
         'xcode_settings':
         {
           'WARNING_CFLAGS': [ '-Wall', '-Wextra', '-Wno-unused-parameter' ],
-          'OTHER_CPLUSPLUSFLAGS' : [ '-std=c++14' ]
+          'OTHER_CPLUSPLUSFLAGS' : [ '-std=c++17' ]
         }
       }],
 

@@ -14,6 +14,8 @@
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
+#include "RTC/RTCP/Bye.hpp"
+#include "RTC/RTCP/XR.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RtpDictionaries.hpp"
@@ -1704,6 +1706,8 @@ namespace RTC
 		delete packet;
 	}
 
+	#define DEL_POINT_IN_POOL(classname, ptr) classname##::Release(ptr)
+
 	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
@@ -1717,7 +1721,35 @@ namespace RTC
 
 			packet = packet->GetNext();
 
-			delete previousPacket;
+			switch (previousPacket->GetType())
+			{
+			case RTCP::Type::SR:
+				RTCP::SenderReportPacket::Release((RTCP::SenderReportPacket*)previousPacket);
+				break;
+			case RTCP::Type::RR:
+				RTCP::ReceiverReportPacket::Release((RTCP::ReceiverReportPacket*)previousPacket);
+				break;
+			case RTCP::Type::SDES:
+				RTCP::SdesPacket::Release((RTCP::SdesPacket*)previousPacket);
+				break;
+			case RTCP::Type::BYE:
+				RTCP::ByePacket::Release((RTCP::ByePacket*)previousPacket);
+				break;
+			case RTCP::Type::APP:
+				break;
+			case RTCP::Type::RTPFB:
+				RTCP::FeedbackRtpPacket::Release((RTCP::FeedbackRtpPacket*)previousPacket);
+				break;
+			case RTCP::Type::PSFB:
+				RTCP::FeedbackPsPacket::Release((RTCP::FeedbackPsPacket*)previousPacket);
+				break;
+			case RTCP::Type::XR:
+				RTCP::ExtendedReportPacket::Release((RTCP::ExtendedReportPacket*)previousPacket);
+				break;
+			
+			default:
+				break;
+			}
 		}
 	}
 

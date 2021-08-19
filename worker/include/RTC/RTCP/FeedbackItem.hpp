@@ -2,6 +2,7 @@
 #define MS_RTC_RTCP_FEEDBACK_ITEM_HPP
 
 #include "common.hpp"
+#include <optional>
 
 namespace RTC
 {
@@ -11,16 +12,16 @@ namespace RTC
 		{
 		public:
 			template<typename Item>
-			static Item* Parse(const uint8_t* data, size_t len)
+			static std::optional<Item> Parse(const uint8_t* data, size_t len)
 			{
 				// data size must be >= header.
 				if (sizeof(typename Item::Header) > len)
-					return nullptr;
+					return std::nullopt;
 
 				auto* header =
 				  const_cast<typename Item::Header*>(reinterpret_cast<const typename Item::Header*>(data));
 
-				return new Item(header);
+				return Item(header);
 			}
 
 		public:

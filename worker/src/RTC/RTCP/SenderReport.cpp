@@ -4,12 +4,15 @@
 #include "RTC/RTCP/SenderReport.hpp"
 #include "Logger.hpp"
 #include <cstring>
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
 	namespace RTCP
 	{
 		/* Class methods. */
+
+		ObjectPool<SenderReport> SRPool(1000);
 
 		SenderReport* SenderReport::Parse(const uint8_t* data, size_t len)
 		{
@@ -26,7 +29,12 @@ namespace RTC
 				return nullptr;
 			}
 
-			return new SenderReport(header);
+			return SRPool.New(header);
+		}
+
+		void SenderReport::Release(SenderReport* sr)
+		{
+			SRPool.Delete(sr);
 		}
 
 		/* Instance methods. */
@@ -57,6 +65,8 @@ namespace RTC
 
 		/* Class methods. */
 
+		ObjectPool<SenderReportPacket> SRPPool(1000);
+
 		SenderReportPacket* SenderReportPacket::Parse(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
@@ -64,7 +74,8 @@ namespace RTC
 			// Get the header.
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
-			std::unique_ptr<SenderReportPacket> packet(new SenderReportPacket(header));
+			SenderReportPacket* packet = SRPPool.New(header);
+
 			size_t offset = sizeof(Packet::CommonHeader);
 
 			SenderReport* report = SenderReport::Parse(data + offset, len - offset);
@@ -72,7 +83,12 @@ namespace RTC
 			if (report)
 				packet->AddReport(report);
 
-			return packet.release();
+			return packet;
+		}
+
+		void SenderReportPacket::Release(SenderReportPacket* srp)
+		{
+			SRPPool.Delete(srp);
 		}
 
 		/* Instance methods. */

@@ -5,12 +5,14 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include <cstring>
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
 	namespace RTCP
 	{
 		/* Class methods. */
+		ObjectPool<ByePacket> BPPool(1000);
 
 		ByePacket* ByePacket::Parse(const uint8_t* data, size_t len)
 		{
@@ -18,7 +20,7 @@ namespace RTC
 
 			// Get the header.
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-			std::unique_ptr<ByePacket> packet(new ByePacket(header));
+			ByePacket* packet = BPPool.New();
 			size_t offset = sizeof(Packet::CommonHeader);
 			uint8_t count = header->count;
 
@@ -45,7 +47,12 @@ namespace RTC
 					packet->SetReason(std::string(reinterpret_cast<const char*>(data) + offset, length));
 			}
 
-			return packet.release();
+			return packet;
+		}
+
+		void ByePacket::Release(ByePacket* bp)
+		{
+			BPPool.Delete(bp);
 		}
 
 		/* Instance methods. */

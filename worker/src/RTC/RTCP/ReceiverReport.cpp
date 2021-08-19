@@ -5,12 +5,14 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include <cstring>
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
 	namespace RTCP
 	{
 		/* Class methods. */
+		ObjectPool<ReceiverReport> RRPool(1000);
 
 		ReceiverReport* ReceiverReport::Parse(const uint8_t* data, size_t len)
 		{
@@ -27,7 +29,12 @@ namespace RTC
 				return nullptr;
 			}
 
-			return new ReceiverReport(header);
+			return RRPool.New(header);
+		}
+
+		void ReceiverReport::Release(ReceiverReport* rr)
+		{
+			RRPool.Delete(rr);
 		}
 
 		/* Instance methods. */
@@ -59,6 +66,8 @@ namespace RTC
 
 		/* Class methods. */
 
+		ObjectPool<ReceiverReportPacket> RRPPoll(1000);
+
 		/**
 		 * ReceiverReportPacket::Parse()
 		 * @param  data   - Points to the begining of the incoming RTCP packet.
@@ -80,7 +89,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			std::unique_ptr<ReceiverReportPacket> packet(new ReceiverReportPacket(header));
+			ReceiverReportPacket* packet = RRPPoll.New(header);
 
 			uint32_t ssrc =
 			  Utils::Byte::Get4Bytes(reinterpret_cast<uint8_t*>(header), sizeof(CommonHeader));
@@ -103,11 +112,16 @@ namespace RTC
 				}
 				else
 				{
-					return packet.release();
+					return packet;
 				}
 			}
 
-			return packet.release();
+			return packet;
+		}
+
+		void ReceiverReportPacket::Release(ReceiverReportPacket* rrp)
+		{
+			RRPPoll.Delete(rrp);
 		}
 
 		/* Instance methods. */

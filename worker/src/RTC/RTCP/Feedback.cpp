@@ -19,6 +19,7 @@
 #include "RTC/RTCP/FeedbackRtpTmmb.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include <cstring>
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
@@ -114,6 +115,8 @@ namespace RTC
 		};
 		// clang-format on
 
+		ObjectPool<FeedbackPsPacket> PPFBPool(1000);
+
 		template<>
 		FeedbackPacket<FeedbackPs>* FeedbackPacket<FeedbackPs>::Parse(const uint8_t* data, size_t len)
 		{
@@ -179,6 +182,58 @@ namespace RTC
 			}
 
 			return packet;
+		}
+
+		template<>
+		void FeedbackPsPacket::Release(FeedbackPsPacket* ppfb)
+		{
+			switch (ppfb->GetMessageType())
+			{
+			case FeedbackPs::MessageType::PLI:
+				FeedbackPsPliPacket::Release(ppfb);
+				break;
+
+			case FeedbackPs::MessageType::SLI:
+				FeedbackPsSliPacket::Release(ppfb);
+				break;
+
+			case FeedbackPs::MessageType::RPSI:
+				FeedbackPsRpsiPacket::Release(ppfb);
+				break;
+
+			case FeedbackPs::MessageType::FIR:
+				FeedbackPsFirPacket::Release(ppfb);
+				break;
+
+			case FeedbackPs::MessageType::TSTR:
+				FeedbackPsTstrPacket::Release(ppfb);
+				break;
+
+			case FeedbackPs::MessageType::TSTN:
+				FeedbackPsTstnPacket::Release(ppfb);
+				break;
+
+			case FeedbackPs::MessageType::VBCM:
+				FeedbackPsVbcmPacket::Release(ppfb);
+				break;
+
+			case FeedbackPs::MessageType::PSLEI:
+				FeedbackPsLeiPacket::Release(ppfb);
+				break;
+
+			case FeedbackPs::MessageType::ROI:
+				break;
+
+			case FeedbackPs::MessageType::AFB:
+				FeedbackPsAfbPacket::Release(ppfb);
+				break;
+
+			case FeedbackPs::MessageType::EXT:
+				break;
+			
+			default:
+				break;
+			}	
 		}
 
 		/* Specialization for Rtcp class. */

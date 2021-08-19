@@ -81,7 +81,7 @@ namespace RTC
 
 		public:
 			static ExtendedReportPacket* Parse(const uint8_t* data, size_t len);
-
+			static void Release(ExtendedReportPacket* epp);
 		public:
 			ExtendedReportPacket() : Packet(Type::XR)
 			{

@@ -28,6 +28,8 @@ namespace RTC
 		public:
 			static ReceiverReport* Parse(const uint8_t* data, size_t len);
 
+			static void Release(ReceiverReport* rr);
+
 		public:
 			// Locally generated Report. Holds the data internally.
 			ReceiverReport()
@@ -134,6 +136,8 @@ namespace RTC
 		public:
 			static ReceiverReportPacket* Parse(const uint8_t* data, size_t len, size_t offset = 0);
 
+			static void Release(ReceiverReportPacket* rrp);
+
 		public:
 			ReceiverReportPacket() : Packet(Type::RR)
 			{
@@ -145,7 +149,7 @@ namespace RTC
 			{
 				for (auto* report : this->reports)
 				{
-					delete report;
+					ReceiverReport::Release(report);
 				}
 			}
 

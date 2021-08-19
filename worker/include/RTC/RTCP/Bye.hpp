@@ -17,7 +17,7 @@ namespace RTC
 
 		public:
 			static ByePacket* Parse(const uint8_t* data, size_t len);
-
+			static void Release(ByePacket* bp);
 		public:
 			ByePacket() : Packet(Type::BYE)
 			{

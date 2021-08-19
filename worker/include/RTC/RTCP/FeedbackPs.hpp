@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include <vector>
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
@@ -17,14 +18,16 @@ namespace RTC
 
 		public:
 			static FeedbackPsItemsPacket<Item>* Parse(const uint8_t* data, size_t len);
+			static void Release(FeedbackPsItemsPacket<Item>* pipfb);
 
 		public:
 			// Parsed Report. Points to an external data.
-			explicit FeedbackPsItemsPacket(CommonHeader* commonHeader) : FeedbackPsPacket(commonHeader)
+			explicit FeedbackPsItemsPacket(CommonHeader* commonHeader) : FeedbackPsPacket(commonHeader), ItemPool(1000)
 			{
+				
 			}
 			explicit FeedbackPsItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc = 0)
-			  : FeedbackPsPacket(Item::messageType, senderSsrc, mediaSsrc)
+			  : FeedbackPsPacket(Item::messageType, senderSsrc, mediaSsrc), ItemPool(1000)
 			{
 			}
 			~FeedbackPsItemsPacket()
@@ -66,6 +69,8 @@ namespace RTC
 
 		private:
 			std::vector<Item*> items;
+			static ObjectPool<FeedbackPsItemsPacket<Item>> Pool;
+			ObjectPool<Item> ItemPool;
 		};
 	} // namespace RTCP
 } // namespace RTC

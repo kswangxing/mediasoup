@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include <cstring>
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
@@ -29,6 +30,8 @@ namespace RTC
 
 		/* Class methods. */
 
+		ObjectPool<SdesItem> SIPool(1000);
+
 		SdesItem* SdesItem::Parse(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
@@ -47,7 +50,12 @@ namespace RTC
 			if (header->type == SdesItem::Type::END)
 				return nullptr;
 
-			return new SdesItem(header);
+			return SIPool.New(header);
+		}
+
+		void SdesItem::Release(SdesItem* si)
+		{
+			SIPool.Delete(si);
 		}
 
 		const std::string& SdesItem::Type2String(SdesItem::Type type)
@@ -107,6 +115,8 @@ namespace RTC
 
 		/* Class methods. */
 
+		ObjectPool<SdesChunk> SCPool(1000);
+
 		SdesChunk* SdesChunk::Parse(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
@@ -121,7 +131,7 @@ namespace RTC
 
 			uint32_t ssrc = Utils::Byte::Get4Bytes(data, 0);
 
-			std::unique_ptr<SdesChunk> chunk(new SdesChunk(ssrc));
+			SdesChunk* chunk = SCPool.New(ssrc);
 
 			size_t offset = 4u /* ssrc */;
 
@@ -136,7 +146,12 @@ namespace RTC
 				offset += item->GetSize();
 			}
 
-			return chunk.release();
+			return chunk;
+		}
+
+		void SdesChunk::Release(SdesChunk* sc)
+		{
+			SCPool.Delete(sc);
 		}
 
 		/* Instance methods. */
@@ -181,13 +196,15 @@ namespace RTC
 
 		/* Class methods. */
 
+		ObjectPool<SdesPacket> SPPool(1000);
+
 		SdesPacket* SdesPacket::Parse(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
 
 			// Get the header.
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-			std::unique_ptr<SdesPacket> packet(new SdesPacket(header));
+			SdesPacket* packet = SPPool.New(header);
 			size_t offset = sizeof(Packet::CommonHeader);
 			uint8_t count = header->count;
 
@@ -202,11 +219,16 @@ namespace RTC
 				}
 				else
 				{
-					return packet.release();
+					return packet;
 				}
 			}
 
-			return packet.release();
+			return packet;
+		}
+
+		void SdesPacket::Release(SdesPacket* sp)
+		{
+			SPPool.Delete(sp);
 		}
 
 		/* Instance methods. */

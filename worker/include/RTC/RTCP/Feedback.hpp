@@ -25,6 +25,8 @@ namespace RTC
 			static FeedbackPacket<T>* Parse(const uint8_t* data, size_t len);
 			static const std::string& MessageType2String(typename T::MessageType type);
 
+			static void Release(FeedbackPacket<T>* fbp);
+
 		private:
 			static std::map<typename T::MessageType, std::string> type2String;
 

@@ -40,6 +40,8 @@ namespace RTC
 			static SdesItem* Parse(const uint8_t* data, size_t len);
 			static const std::string& Type2String(SdesItem::Type type);
 
+			static void Release(SdesItem* si);
+
 		public:
 			explicit SdesItem(Header* header) : header(header)
 			{
@@ -87,6 +89,7 @@ namespace RTC
 		public:
 			static SdesChunk* Parse(const uint8_t* data, size_t len);
 
+			static void Release(SdesChunk* sc);
 		public:
 			explicit SdesChunk(uint32_t ssrc)
 			{
@@ -105,7 +108,7 @@ namespace RTC
 			{
 				for (auto* item : this->items)
 				{
-					delete item;
+					SdesItem::Release(item);
 				}
 			}
 
@@ -159,6 +162,8 @@ namespace RTC
 		public:
 			static SdesPacket* Parse(const uint8_t* data, size_t len);
 
+			static void Release(SdesPacket* sp);
+
 		public:
 			SdesPacket() : Packet(RTCP::Type::SDES)
 			{
@@ -170,7 +175,7 @@ namespace RTC
 			{
 				for (auto* chunk : this->chunks)
 				{
-					delete chunk;
+					SdesChunk::Release(chunk);
 				}
 			}
 
