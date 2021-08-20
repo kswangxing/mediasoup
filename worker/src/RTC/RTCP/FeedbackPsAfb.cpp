@@ -6,12 +6,14 @@
 #include "Utils.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
 #include <cstring>
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
 	namespace RTCP
 	{
 		/* Class methods. */
+		ObjectPool<FeedbackPsAfbPacket> PAPPool(1000);
 
 		FeedbackPsAfbPacket* FeedbackPsAfbPacket::Parse(const uint8_t* data, size_t len)
 		{
@@ -46,6 +48,18 @@ namespace RTC
 			}
 
 			return packet.release();
+		}
+
+		void FeedbackPsAfbPacket::Release(FeedbackPsAfbPacket* papfb)
+		{
+			if (papfb->GetApplication() == Application::UNKNOWN)
+			{
+				PAPPool.Delete(papfb);	
+			}
+			else if (papfb->GetApplication() == Application::REMB)
+			{
+				FeedbackPsRembPacket::Release((FeedbackPsRembPacket*)papfb);
+			}
 		}
 
 		size_t FeedbackPsAfbPacket::Serialize(uint8_t* buffer)

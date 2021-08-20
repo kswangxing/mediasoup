@@ -37,7 +37,7 @@ namespace RTC
 
 		public:
 			static FeedbackPsRembPacket* Parse(const uint8_t* data, size_t len);
-
+			static void Release(FeedbackPsRembPacket* prpfb);
 		public:
 			// Parsed Report. Points to an external data.
 			FeedbackPsRembPacket(uint32_t senderSsrc, uint32_t mediaSsrc)

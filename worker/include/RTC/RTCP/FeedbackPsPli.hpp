@@ -12,7 +12,7 @@ namespace RTC
 		{
 		public:
 			static FeedbackPsPliPacket* Parse(const uint8_t* data, size_t len);
-
+			static void Release(FeedbackPsPliPacket* pppfb);
 		public:
 			// Parsed Report. Points to an external data.
 			explicit FeedbackPsPliPacket(CommonHeader* commonHeader) : FeedbackPsPacket(commonHeader)

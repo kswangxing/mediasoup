@@ -3,12 +3,15 @@
 
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "Logger.hpp"
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
 	namespace RTCP
 	{
 		/* Class methods. */
+
+		ObjectPool<FeedbackPsPliPacket> PPFBPool(1000);
 
 		FeedbackPsPliPacket* FeedbackPsPliPacket::Parse(const uint8_t* data, size_t len)
 		{
@@ -24,9 +27,12 @@ namespace RTC
 			// NOLINTNEXTLINE(llvm-qualified-auto)
 			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
-			std::unique_ptr<FeedbackPsPliPacket> packet(new FeedbackPsPliPacket(commonHeader));
+			return PPFBPool.New(commonHeader);
+		}
 
-			return packet.release();
+		void FeedbackPsPliPacket::Release(FeedbackPsPliPacket* pppfb)
+		{
+			PPFBPool.Delete(pppfb);
 		}
 
 		void FeedbackPsPliPacket::Dump() const

@@ -21,6 +21,9 @@ namespace RTC
 		ObjectPool<FeedbackPsItemsPacket<Item>> FeedbackPsItemsPacket<Item>::Pool(1000);
 
 		template<typename Item>
+		ObjectPool<Item> FeedbackPsItemsPacket<Item>::ItemPool(1000);
+
+		template<typename Item>
 		FeedbackPsItemsPacket<Item>* FeedbackPsItemsPacket<Item>::Parse(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
@@ -51,6 +54,7 @@ namespace RTC
 					}
 
 					packet->AddItem(ItemPool.New(item.values()));
+
 					offset += item->GetSize();
 				}
 				else

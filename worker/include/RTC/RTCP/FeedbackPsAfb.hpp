@@ -19,7 +19,7 @@ namespace RTC
 
 		public:
 			static FeedbackPsAfbPacket* Parse(const uint8_t* data, size_t len);
-
+			static void Release(FeedbackPsAfbPacket* papfb);
 		public:
 			// Parsed Report. Points to an external data.
 			explicit FeedbackPsAfbPacket(

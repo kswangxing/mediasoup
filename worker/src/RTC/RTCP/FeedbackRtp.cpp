@@ -15,6 +15,12 @@ namespace RTC
 		/* Class methods. */
 
 		template<typename Item>
+		ObjectPool<FeedbackRtpItemsPacket<Item>> FeedbackRtpItemsPacket<Item>::RIPPool(1000);
+
+		template<typename Item>
+		ObjectPool<Item> FeedbackRtpItemsPacket<Item>::ItemPool(1000);
+
+		template<typename Item>
 		FeedbackRtpItemsPacket<Item>* FeedbackRtpItemsPacket<Item>::Parse(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
@@ -29,18 +35,17 @@ namespace RTC
 			// NOLINTNEXTLINE(llvm-qualified-auto)
 			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
-			std::unique_ptr<FeedbackRtpItemsPacket<Item>> packet(
-			  new FeedbackRtpItemsPacket<Item>(commonHeader));
+			FeedbackRtpItemsPacket<Item>* packet = RIPPool.New(commonHeader);
 
 			size_t offset = sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
 
 			while (len > offset)
 			{
-				auto* item = FeedbackItem::Parse<Item>(data + offset, len - offset);
+				auto item = FeedbackItem::Parse<Item>(data + offset, len - offset);
 
-				if (item)
+				if (item.has_value())
 				{
-					packet->AddItem(item);
+					packet->AddItem(ItemPool.New(item.value()));
 					offset += item->GetSize();
 				}
 				else
@@ -49,7 +54,13 @@ namespace RTC
 				}
 			}
 
-			return packet.release();
+			return packet;
+		}
+
+		template<typename Item>
+		void FeedbackRtpItemsPacket<Item>::Release(FeedbackRtpItemsPacket<Item>* item)
+		{
+			RIPPool.Delete(item);
 		}
 
 		/* Instance methods. */

@@ -86,7 +86,7 @@ namespace RTC
 			{
 			public:
 				static Chunk* Parse(const uint8_t* data, size_t len, uint16_t count);
-
+				static void Release(FeedbackRtpTransportPacket::Chunk* chnk);
 			public:
 				Chunk()          = default;
 				virtual ~Chunk() = default;
@@ -101,7 +101,7 @@ namespace RTC
 				virtual size_t Serialize(uint8_t* buffer) = 0;
 			};
 
-		private:
+		public:
 			class RunLengthChunk : public Chunk
 			{
 			public:
@@ -133,7 +133,7 @@ namespace RTC
 				uint16_t count{ 0u };
 			};
 
-		private:
+		public:
 			class OneBitVectorChunk : public Chunk
 			{
 			public:
@@ -160,7 +160,7 @@ namespace RTC
 				std::vector<Status> statuses;
 			};
 
-		private:
+		public:
 			class TwoBitVectorChunk : public Chunk
 			{
 			public:
@@ -195,7 +195,7 @@ namespace RTC
 
 		public:
 			static FeedbackRtpTransportPacket* Parse(const uint8_t* data, size_t len);
-
+			static void Release(FeedbackRtpTransportPacket* rtp);
 		private:
 			static std::map<Status, std::string> status2String;
 

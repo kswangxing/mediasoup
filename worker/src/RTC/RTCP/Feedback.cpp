@@ -190,42 +190,42 @@ namespace RTC
 			switch (ppfb->GetMessageType())
 			{
 			case FeedbackPs::MessageType::PLI:
-				FeedbackPsPliPacket::Release(ppfb);
+				FeedbackPsPliPacket::Release((FeedbackPsPliPacket*)ppfb);
 				break;
 
 			case FeedbackPs::MessageType::SLI:
-				FeedbackPsSliPacket::Release(ppfb);
+				FeedbackPsSliPacket::Release((FeedbackPsSliPacket*)ppfb);
 				break;
 
 			case FeedbackPs::MessageType::RPSI:
-				FeedbackPsRpsiPacket::Release(ppfb);
+				FeedbackPsRpsiPacket::Release((FeedbackPsRpsiPacket*)ppfb);
 				break;
 
 			case FeedbackPs::MessageType::FIR:
-				FeedbackPsFirPacket::Release(ppfb);
+				FeedbackPsFirPacket::Release((FeedbackPsFirPacket*)ppfb);
 				break;
 
 			case FeedbackPs::MessageType::TSTR:
-				FeedbackPsTstrPacket::Release(ppfb);
+				FeedbackPsTstrPacket::Release((FeedbackPsTstrPacket*)ppfb);
 				break;
 
 			case FeedbackPs::MessageType::TSTN:
-				FeedbackPsTstnPacket::Release(ppfb);
+				FeedbackPsTstnPacket::Release((FeedbackPsTstnPacket*)ppfb);
 				break;
 
 			case FeedbackPs::MessageType::VBCM:
-				FeedbackPsVbcmPacket::Release(ppfb);
+				FeedbackPsVbcmPacket::Release((FeedbackPsVbcmPacket*)ppfb);
 				break;
 
 			case FeedbackPs::MessageType::PSLEI:
-				FeedbackPsLeiPacket::Release(ppfb);
+				FeedbackPsLeiPacket::Release((FeedbackPsLeiPacket*)ppfb);
 				break;
 
 			case FeedbackPs::MessageType::ROI:
 				break;
 
 			case FeedbackPs::MessageType::AFB:
-				FeedbackPsAfbPacket::Release(ppfb);
+				FeedbackPsAfbPacket::Release((FeedbackPsAfbPacket*)ppfb);
 				break;
 
 			case FeedbackPs::MessageType::EXT:
@@ -322,6 +322,53 @@ namespace RTC
 			}
 
 			return packet;
+		}
+
+		template<>
+		void FeedbackPacket<FeedbackRtp>::Release(FeedbackPacket<FeedbackRtp>* rpfb)
+		{
+			switch (rpfb->GetMessageType())
+			{
+				case FeedbackRtp::MessageType::NACK:
+					FeedbackRtpNackPacket::Release((FeedbackRtpNackPacket*)rpfb);
+					break;
+
+				case FeedbackRtp::MessageType::TMMBR:
+					FeedbackRtpTmmbrPacket::Release((FeedbackRtpTmmbrPacket*)rpfb);
+					break;
+
+				case FeedbackRtp::MessageType::TMMBN:
+					FeedbackRtpTmmbnPacket::Release((FeedbackRtpTmmbnPacket*)rpfb);
+					break;
+
+				case FeedbackRtp::MessageType::SR_REQ:
+					FeedbackRtpSrReqPacket::Release((FeedbackRtpSrReqPacket*)rpfb);
+					break;
+
+				case FeedbackRtp::MessageType::RAMS:
+					break;
+
+				case FeedbackRtp::MessageType::TLLEI:
+					FeedbackRtpTlleiPacket::Release((FeedbackRtpTlleiPacket*)rpfb);
+					break;
+
+				case FeedbackRtp::MessageType::ECN:
+					FeedbackRtpEcnPacket::Release((FeedbackRtpEcnPacket*)rpfb);
+					break;
+
+				case FeedbackRtp::MessageType::PS:
+					break;
+
+				case FeedbackRtp::MessageType::EXT:
+					break;
+
+				case FeedbackRtp::MessageType::TCC:
+					FeedbackRtpTransportPacket::Release((FeedbackRtpTransportPacket*)rpfb);
+					break;
+
+				default:
+					break;
+			}	
 		}
 
 		// Explicit instantiation to have all FeedbackPacket definitions in this file.

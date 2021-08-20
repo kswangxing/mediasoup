@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include <cstring>
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
@@ -15,6 +16,8 @@ namespace RTC
 		uint32_t FeedbackPsRembPacket::uniqueIdentifier{ 0x52454D42 };
 
 		/* Class methods. */
+
+		ObjectPool<FeedbackPsRembPacket> PRPPool(1000);
 
 		FeedbackPsRembPacket* FeedbackPsRembPacket::Parse(const uint8_t* data, size_t len)
 		{
@@ -33,12 +36,20 @@ namespace RTC
 			// NOLINTNEXTLINE(llvm-qualified-auto)
 			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
-			std::unique_ptr<FeedbackPsRembPacket> packet(new FeedbackPsRembPacket(commonHeader, len));
+			FeedbackPsRembPacket* packet = PRPPool.New(commonHeader, len);
 
 			if (!packet->IsCorrect())
+			{
+				PRPPool.Delete(packet);
 				return nullptr;
+			}
+			
+			return packet;
+		}
 
-			return packet.release();
+		void FeedbackPsRembPacket::Release(FeedbackPsRembPacket* prpfb)
+		{
+			PRPPool.Delete(prpfb);
 		}
 
 		FeedbackPsRembPacket::FeedbackPsRembPacket(CommonHeader* commonHeader, size_t availableLen)

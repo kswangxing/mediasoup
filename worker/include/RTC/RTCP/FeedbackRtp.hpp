@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include <vector>
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
@@ -17,6 +18,7 @@ namespace RTC
 
 		public:
 			static FeedbackRtpItemsPacket<Item>* Parse(const uint8_t* data, size_t len);
+			static void Release(FeedbackRtpItemsPacket<Item>* item);
 
 		public:
 			// Parsed Report. Points to an external data.
@@ -31,7 +33,7 @@ namespace RTC
 			{
 				for (auto* item : this->items)
 				{
-					delete item;
+					ItemPool.Delete(item);
 				}
 			}
 
@@ -66,6 +68,9 @@ namespace RTC
 
 		private:
 			std::vector<Item*> items;
+
+			static ObjectPool<FeedbackRtpItemsPacket<Item>> RIPPool;
+			static ObjectPool<Item> ItemPool;
 		};
 	} // namespace RTCP
 } // namespace RTC

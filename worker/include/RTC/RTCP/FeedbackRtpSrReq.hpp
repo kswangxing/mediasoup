@@ -12,7 +12,7 @@ namespace RTC
 		{
 		public:
 			static FeedbackRtpSrReqPacket* Parse(const uint8_t* data, size_t len);
-
+			static void Release(FeedbackRtpSrReqPacket* srp);
 		public:
 			// Parsed Report. Points to an external data.
 			explicit FeedbackRtpSrReqPacket(CommonHeader* commonHeader) : FeedbackRtpPacket(commonHeader)

@@ -145,7 +145,7 @@
       # Platform-specifics.
 
       [ 'OS != "win"', {
-        'cflags': [ '-std=c++11' ]
+        'cflags': [ '-std=c++17' ]
       }],
 
       [ 'OS == "mac"', {

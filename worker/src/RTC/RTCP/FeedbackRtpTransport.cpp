@@ -7,6 +7,7 @@
 #include "RTC/SeqManager.hpp"
 #include <limits> // std::numeric_limits()
 #include <sstream>
+#include "ObjectPool.hpp"
 
 // Code taken and adapted from libwebrtc (byte_io.h).
 inline static int32_t parseReferenceTime(uint8_t* buffer)
@@ -70,6 +71,8 @@ namespace RTC
 
 		/* Class methods. */
 
+		ObjectPool<FeedbackRtpTransportPacket> RTPPool(1000);
+
 		FeedbackRtpTransportPacket* FeedbackRtpTransportPacket::Parse(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
@@ -84,13 +87,21 @@ namespace RTC
 			// NOLINTNEXTLINE(llvm-qualified-auto)
 			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
-			std::unique_ptr<FeedbackRtpTransportPacket> packet(
-			  new FeedbackRtpTransportPacket(commonHeader, len));
+			FeedbackRtpTransportPacket* packet = RTPPool.New(commonHeader, len);
 
 			if (!packet->IsCorrect())
+			{
+				RTPPool.Delete(packet);
 				return nullptr;
+			}
+				
 
-			return packet.release();
+			return packet;
+		}
+
+		void FeedbackRtpTransportPacket::Release(FeedbackRtpTransportPacket* rtp)
+		{
+			RTPPool.Delete(rtp);
 		}
 
 		/* Instance methods. */
@@ -208,7 +219,7 @@ namespace RTC
 
 			for (auto* chunk : this->chunks)
 			{
-				delete chunk;
+				Chunk::Release(chunk);
 			}
 			this->chunks.clear();
 		}
@@ -632,6 +643,10 @@ namespace RTC
 			this->context.statuses.clear();
 		}
 
+		ObjectPool<RTCP::FeedbackRtpTransportPacket::RunLengthChunk> LengthChnkPool(1000);
+		ObjectPool<RTCP::FeedbackRtpTransportPacket::OneBitVectorChunk> OneBitChnkPool(1000);
+		ObjectPool<RTCP::FeedbackRtpTransportPacket::TwoBitVectorChunk> TwoBitChnkPool(1000);
+
 		FeedbackRtpTransportPacket::Chunk* FeedbackRtpTransportPacket::Chunk::Parse(
 		  const uint8_t* data, size_t len, uint16_t count)
 		{
@@ -650,7 +665,7 @@ namespace RTC
 			// Run length chunk.
 			if (chunkType == 0)
 			{
-				auto* chunk = new RunLengthChunk(bytes);
+				auto* chunk = LengthChnkPool.New(bytes);
 
 				// Verify that the status is a valid one.
 				switch (chunk->GetStatus())
@@ -665,9 +680,7 @@ namespace RTC
 					default:
 					{
 						MS_WARN_DEV("invalid status for a run length chunk");
-
-						delete chunk;
-
+						LengthChnkPool.Delete(chunk);
 						return nullptr;
 					}
 				}
@@ -678,12 +691,29 @@ namespace RTC
 				uint8_t symbolSize = data[0] & 0x40;
 
 				if (symbolSize == 0)
-					return new OneBitVectorChunk(bytes, count);
+					return OneBitChnkPool.New(bytes, count);
 				else
-					return new TwoBitVectorChunk(bytes, count);
+					return TwoBitChnkPool.New(bytes, count);
 			}
 
 			return nullptr;
+		}
+
+		void FeedbackRtpTransportPacket::Chunk::Release(Chunk* chnk)
+		{
+			size_t code = typeid(*chnk).hash_code();
+			if (code == typeid(RunLengthChunk).hash_code())
+			{
+				LengthChnkPool.Delete((RunLengthChunk*)chnk);
+			}
+			else if (code == typeid(OneBitVectorChunk).hash_code())
+			{
+				OneBitChnkPool.Delete((OneBitVectorChunk*)chnk);
+			}
+			else if (code == typeid(TwoBitVectorChunk).hash_code())
+			{
+				TwoBitChnkPool.Delete((TwoBitVectorChunk*)chnk);
+			}
 		}
 
 		FeedbackRtpTransportPacket::RunLengthChunk::RunLengthChunk(uint16_t buffer)

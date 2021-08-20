@@ -3,12 +3,15 @@
 
 #include "RTC/RTCP/FeedbackRtpSrReq.hpp"
 #include "Logger.hpp"
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
 	namespace RTCP
 	{
 		/* Class methods. */
+
+		ObjectPool<FeedbackRtpSrReqPacket> SRPFBPool(1000);
 
 		FeedbackRtpSrReqPacket* FeedbackRtpSrReqPacket::Parse(const uint8_t* data, size_t len)
 		{
@@ -23,7 +26,12 @@ namespace RTC
 
 			auto* commonHeader = reinterpret_cast<CommonHeader*>(const_cast<uint8_t*>(data));
 
-			return new FeedbackRtpSrReqPacket(commonHeader);
+			return SRPFBPool.New(commonHeader);
+		}
+
+		void FeedbackRtpSrReqPacket::Release(FeedbackRtpSrReqPacket* srp)
+		{
+			SRPFBPool.Delete(srp);
 		}
 
 		void FeedbackRtpSrReqPacket::Dump() const

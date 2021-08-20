@@ -22,19 +22,19 @@ namespace RTC
 
 		public:
 			// Parsed Report. Points to an external data.
-			explicit FeedbackPsItemsPacket(CommonHeader* commonHeader) : FeedbackPsPacket(commonHeader), ItemPool(1000)
+			explicit FeedbackPsItemsPacket(CommonHeader* commonHeader) : FeedbackPsPacket(commonHeader)
 			{
 				
 			}
 			explicit FeedbackPsItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc = 0)
-			  : FeedbackPsPacket(Item::messageType, senderSsrc, mediaSsrc), ItemPool(1000)
+			  : FeedbackPsPacket(Item::messageType, senderSsrc, mediaSsrc)
 			{
 			}
 			~FeedbackPsItemsPacket()
 			{
 				for (auto* item : this->items)
 				{
-					delete item;
+					ItemPool.Delete(item);
 				}
 			}
 
@@ -70,7 +70,7 @@ namespace RTC
 		private:
 			std::vector<Item*> items;
 			static ObjectPool<FeedbackPsItemsPacket<Item>> Pool;
-			ObjectPool<Item> ItemPool;
+			static ObjectPool<Item> ItemPool;
 		};
 	} // namespace RTCP
 } // namespace RTC
