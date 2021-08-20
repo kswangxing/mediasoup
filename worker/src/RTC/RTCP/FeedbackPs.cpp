@@ -48,12 +48,12 @@ namespace RTC
 
 				if (item.has_value())
 				{
-					if (!item.IsCorrect())
+					if (!item->IsCorrect())
 					{
 						break;
 					}
 
-					packet->AddItem(ItemPool.New(item.values()));
+					packet->AddItem(ItemPool.New(item.value()));
 
 					offset += item->GetSize();
 				}

@@ -11,7 +11,7 @@ namespace RTC
 	{
 		/* Class methods. */
 
-		ObjectPool<FeedbackPsPliPacket> PPFBPool(1000);
+		ObjectPool<FeedbackPsPliPacket> PPPFBPool(1000);
 
 		FeedbackPsPliPacket* FeedbackPsPliPacket::Parse(const uint8_t* data, size_t len)
 		{
@@ -27,12 +27,12 @@ namespace RTC
 			// NOLINTNEXTLINE(llvm-qualified-auto)
 			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
-			return PPFBPool.New(commonHeader);
+			return PPPFBPool.New(commonHeader);
 		}
 
 		void FeedbackPsPliPacket::Release(FeedbackPsPliPacket* pppfb)
 		{
-			PPFBPool.Delete(pppfb);
+			PPPFBPool.Delete(pppfb);
 		}
 
 		void FeedbackPsPliPacket::Dump() const
