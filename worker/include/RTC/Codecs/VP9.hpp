@@ -95,6 +95,8 @@ namespace RTC
 			  uint8_t frameMarkingLen                    = 0);
 			static void ProcessRtpPacket(RTC::RtpPacket* packet);
 
+			static void Release(Codecs::PayloadDescriptorHandler* pldh);
+
 		public:
 			class EncodingContext : public RTC::Codecs::EncodingContext
 			{
@@ -144,7 +146,7 @@ namespace RTC
 				}
 
 			private:
-				std::unique_ptr<PayloadDescriptor> payloadDescriptor;
+				std::unique_ptr<PayloadDescriptor, std::function<void(PayloadDescriptor* pld)>> payloadDescriptor;
 			};
 		};
 	} // namespace Codecs

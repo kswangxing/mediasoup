@@ -4,12 +4,16 @@
 #include "RTC/Codecs/H264.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
 	namespace Codecs
 	{
 		/* Class methods. */
+
+		ObjectPool<H264::PayloadDescriptor> H264PLDPool(1000);
+		ObjectPool<H264::PayloadDescriptorHandler> H264PLDHPool(1000);
 
 		H264::PayloadDescriptor* H264::Parse(
 		  const uint8_t* data, size_t len, RTC::RtpPacket::FrameMarking* frameMarking, uint8_t frameMarkingLen)
@@ -19,7 +23,7 @@ namespace RTC
 			if (len < 2)
 				return nullptr;
 
-			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
+			PayloadDescriptor* payloadDescriptor = H264PLDPool.New();
 
 			// Use frame-marking.
 			if (frameMarking)
@@ -120,7 +124,7 @@ namespace RTC
 				}
 			}
 
-			return payloadDescriptor.release();
+			return payloadDescriptor;
 		}
 
 		void H264::ProcessRtpPacket(RTC::RtpPacket* packet)
@@ -140,9 +144,14 @@ namespace RTC
 			if (!payloadDescriptor)
 				return;
 
-			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
+			auto* payloadDescriptorHandler = H264PLDHPool.New(payloadDescriptor);
 
-			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
+			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler, H264::Release);
+		}
+
+		void H264::Release(RTC::Codecs::PayloadDescriptorHandler* pldh)
+		{
+			H264PLDHPool.Delete((H264::PayloadDescriptorHandler*)pldh);
 		}
 
 		/* Instance methods. */
@@ -169,11 +178,11 @@ namespace RTC
 			MS_DUMP("</PayloadDescriptor>");
 		}
 
-		H264::PayloadDescriptorHandler::PayloadDescriptorHandler(H264::PayloadDescriptor* payloadDescriptor)
-		{
-			MS_TRACE();
+		ObjectPool<H264::PayloadDescriptorHandler> PLDHPool(1000);
 
-			this->payloadDescriptor.reset(payloadDescriptor);
+		H264::PayloadDescriptorHandler::PayloadDescriptorHandler(H264::PayloadDescriptor* payloadDescriptor)
+			: payloadDescriptor(payloadDescriptor, [](H264::PayloadDescriptor* pld) { H264PLDPool.Delete(pld); })
+		{				
 		}
 
 		bool H264::PayloadDescriptorHandler::Process(

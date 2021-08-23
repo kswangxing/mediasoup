@@ -4,12 +4,16 @@
 #include "RTC/Codecs/VP8.hpp"
 #include "Logger.hpp"
 #include <cstring> // std::memcpy()
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
 	namespace Codecs
 	{
 		/* Class methods. */
+
+		ObjectPool<VP8::PayloadDescriptor> VP8PLDPool(1000);
+		ObjectPool<VP8::PayloadDescriptorHandler> VP8PLDHPool(1000);
 
 		VP8::PayloadDescriptor* VP8::Parse(
 		  const uint8_t* data,
@@ -22,7 +26,7 @@ namespace RTC
 			if (len < 1)
 				return nullptr;
 
-			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
+			PayloadDescriptor* payloadDescriptor = VP8PLDPool.New();
 
 			size_t offset{ 0 };
 			uint8_t byte = data[offset];
@@ -108,7 +112,7 @@ namespace RTC
 				payloadDescriptor->isKeyFrame = true;
 			}
 
-			return payloadDescriptor.release();
+			return payloadDescriptor;
 		}
 
 		void VP8::ProcessRtpPacket(RTC::RtpPacket* packet)
@@ -128,9 +132,9 @@ namespace RTC
 			if (!payloadDescriptor)
 				return;
 
-			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
+			auto* payloadDescriptorHandler = VP8PLDHPool.New(payloadDescriptor);
 
-			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
+			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler, VP8::Release);
 
 			// Modify the RtpPacket payload in order to always have two byte pictureId.
 			if (payloadDescriptor->hasOneBytePictureId)
@@ -145,6 +149,11 @@ namespace RTC
 				payloadDescriptor->hasOneBytePictureId  = false;
 				payloadDescriptor->hasTwoBytesPictureId = true;
 			}
+		}
+
+		void VP8::Release(Codecs::PayloadDescriptorHandler* pldh)
+		{
+			VP8PLDHPool.Delete((VP8::PayloadDescriptorHandler*)pldh);
 		}
 
 		/* Instance methods. */
@@ -216,10 +225,9 @@ namespace RTC
 		}
 
 		VP8::PayloadDescriptorHandler::PayloadDescriptorHandler(VP8::PayloadDescriptor* payloadDescriptor)
+			: payloadDescriptor(payloadDescriptor, [](PayloadDescriptor* pld) { VP8PLDPool.Delete(pld); })
 		{
 			MS_TRACE();
-
-			this->payloadDescriptor.reset(payloadDescriptor);
 		}
 
 		bool VP8::PayloadDescriptorHandler::Process(

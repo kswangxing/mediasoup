@@ -8,6 +8,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
+#include <memory>
 
 using json = nlohmann::json;
 
@@ -592,9 +593,11 @@ namespace RTC
 
 		bool RtxDecode(uint8_t payloadType, uint32_t ssrc);
 
-		void SetPayloadDescriptorHandler(RTC::Codecs::PayloadDescriptorHandler* payloadDescriptorHandler)
+		void SetPayloadDescriptorHandler(RTC::Codecs::PayloadDescriptorHandler* payloadDescriptorHandler, 
+			std::function<void(Codecs::PayloadDescriptorHandler*)> delFunc)
 		{
-			this->payloadDescriptorHandler.reset(payloadDescriptorHandler);
+			this->payloadDescriptorHandler = std::unique_ptr<Codecs::PayloadDescriptorHandler, 
+				std::function<void(Codecs::PayloadDescriptorHandler*)>>(payloadDescriptorHandler, delFunc);
 		}
 
 		bool ProcessPayload(RTC::Codecs::EncodingContext* context);
@@ -627,7 +630,7 @@ namespace RTC
 		uint8_t payloadPadding{ 0u };
 		size_t size{ 0u }; // Full size of the packet in bytes.
 		// Codecs
-		std::unique_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
+		std::unique_ptr<Codecs::PayloadDescriptorHandler, std::function<void(Codecs::PayloadDescriptorHandler*)>> payloadDescriptorHandler;
 	};
 } // namespace RTC
 

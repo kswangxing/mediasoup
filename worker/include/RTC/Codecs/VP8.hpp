@@ -129,8 +129,10 @@ namespace RTC
 				}
 
 			private:
-				std::unique_ptr<PayloadDescriptor> payloadDescriptor;
+				std::unique_ptr<PayloadDescriptor, std::function<void(PayloadDescriptor*)>> payloadDescriptor;
 			};
+
+			static void Release(Codecs::PayloadDescriptorHandler* pldh);
 		};
 	} // namespace Codecs
 } // namespace RTC

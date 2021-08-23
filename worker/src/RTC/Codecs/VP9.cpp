@@ -3,12 +3,16 @@
 
 #include "RTC/Codecs/VP9.hpp"
 #include "Logger.hpp"
+#include "ObjectPool.hpp"
 
 namespace RTC
 {
 	namespace Codecs
 	{
 		/* Class methods. */
+
+		ObjectPool<VP9::PayloadDescriptor> VP9PLDPool(1000);
+		ObjectPool<VP9::PayloadDescriptorHandler> VP9PLDHPool(1000);
 
 		VP9::PayloadDescriptor* VP9::Parse(
 		  const uint8_t* data,
@@ -21,7 +25,7 @@ namespace RTC
 			if (len < 1)
 				return nullptr;
 
-			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
+			auto payloadDescriptor = VP9PLDPool.New();
 
 			size_t offset{ 0 };
 			uint8_t byte = data[offset];
@@ -95,7 +99,7 @@ namespace RTC
 				payloadDescriptor->isKeyFrame = true;
 			}
 
-			return payloadDescriptor.release();
+			return payloadDescriptor;
 		}
 
 		void VP9::ProcessRtpPacket(RTC::RtpPacket* packet)
@@ -123,9 +127,14 @@ namespace RTC
 				  packet->GetTemporalLayer());
 			}
 
-			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
+			auto* payloadDescriptorHandler = VP9PLDHPool.New(payloadDescriptor);
 
-			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
+			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler, VP9::Release);
+		}
+
+		void VP9::Release(Codecs::PayloadDescriptorHandler* pldh)
+		{
+			VP9PLDHPool.Delete((VP9::PayloadDescriptorHandler*)pldh);
 		}
 
 		/* Instance methods. */
@@ -161,10 +170,9 @@ namespace RTC
 		}
 
 		VP9::PayloadDescriptorHandler::PayloadDescriptorHandler(VP9::PayloadDescriptor* payloadDescriptor)
+			: payloadDescriptor(payloadDescriptor, [](PayloadDescriptor* pld) { VP9PLDPool.Delete(pld); })
 		{
 			MS_TRACE();
-
-			this->payloadDescriptor.reset(payloadDescriptor);
 		}
 
 		bool VP9::PayloadDescriptorHandler::Process(
