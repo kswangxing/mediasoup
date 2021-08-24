@@ -178,8 +178,6 @@ namespace RTC
 			MS_DUMP("</PayloadDescriptor>");
 		}
 
-		ObjectPool<H264::PayloadDescriptorHandler> PLDHPool(1000);
-
 		H264::PayloadDescriptorHandler::PayloadDescriptorHandler(H264::PayloadDescriptor* payloadDescriptor)
 			: payloadDescriptor(payloadDescriptor, [](H264::PayloadDescriptor* pld) { H264PLDPool.Delete(pld); })
 		{				
