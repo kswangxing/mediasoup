@@ -1000,7 +1000,7 @@ namespace RTC
 				  packet->GetPayloadType(),
 				  packet->GetSequenceNumber());
 
-				delete packet;
+				RtpPacket::Release(packet);
 			}
 
 			return;
