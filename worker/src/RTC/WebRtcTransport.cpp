@@ -875,25 +875,25 @@ namespace RTC
 		// Increase receive transmission.
 		RTC::Transport::DataReceived(len);
 
-		// Check if it's STUN.
-		if (RTC::StunPacket::IsStun(data, len))
+		// Check if it's RTP.
+		if (RTC::RtpPacket::IsRtp(data, len))
 		{
-			OnStunDataReceived(tuple, data, len);
+			OnRtpDataReceived(tuple, data, len);
 		}
 		// Check if it's RTCP.
 		else if (RTC::RTCP::Packet::IsRtcp(data, len))
 		{
 			OnRtcpDataReceived(tuple, data, len);
 		}
-		// Check if it's RTP.
-		else if (RTC::RtpPacket::IsRtp(data, len))
-		{
-			OnRtpDataReceived(tuple, data, len);
-		}
 		// Check if it's DTLS.
 		else if (RTC::DtlsTransport::IsDtls(data, len))
 		{
 			OnDtlsDataReceived(tuple, data, len);
+		}
+		// Check if it's STUN.
+		else if (RTC::StunPacket::IsStun(data, len))
+		{
+			OnStunDataReceived(tuple, data, len);
 		}
 		else
 		{

@@ -127,7 +127,9 @@ namespace RTC
 				// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
 				(data[0] > 127 && data[0] < 192) &&
 				// RTP Version must be 2.
-				(header->version == 2)
+				(header->version == 2) &&
+				// PT
+				(data[1] < 192 || data[1] >223)
 			);
 			// clang-format on
 		}

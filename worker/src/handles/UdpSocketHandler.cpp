@@ -256,32 +256,25 @@ inline void UdpSocketHandler::OnUvRecv(
 {
 	MS_TRACE();
 
-	// NOTE: Ignore if there is nothing to read or if it was an empty datagram.
-	if (nread == 0)
-		return;
-
 	// Check flags.
 	if ((flags & UV_UDP_PARTIAL) != 0u)
 	{
 		MS_ERROR("received datagram was truncated due to insufficient buffer, ignoring it");
-
 		return;
 	}
 
-	// Data received.
-	if (nread > 0)
-	{
-		// Update received bytes.
-		this->recvBytes += nread;
-
-		// Notify the subclass.
-		UserOnUdpDatagramReceived(reinterpret_cast<uint8_t*>(buf->base), nread, addr);
-	}
-	// Some error.
-	else
+	// NOTE: Ignore if there is nothing to read or if it was an empty datagram.
+	if (nread <= 0)
 	{
 		MS_DEBUG_DEV("read error: %s", uv_strerror(nread));
+		return;
 	}
+			
+	// Update received bytes.
+	this->recvBytes += nread;
+
+	// Notify the subclass.
+	UserOnUdpDatagramReceived(reinterpret_cast<uint8_t*>(buf->base), nread, addr);
 }
 
 inline void UdpSocketHandler::OnUvSend(int status, UdpSocketHandler::onSendCallback* cb)
